@@ -30,6 +30,7 @@ type Game struct {
 	Tags            []string         `bson:"tags"`
 	Screenshots     []GameScreenshot `bson:"screenshots"`
 	Movies          []GameMovie      `bson:"movies"`
+	ComingSoon      bool             `bson:"coming_soon"`
 	ReleaseDate     time.Time        `bson:"release_date"`
 	OwnersMin       uint32           `bson:"owners_min"`
 	OwnersMax       uint32           `bson:"owners_max"`

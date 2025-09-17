@@ -92,12 +92,16 @@ func GetSteamAppDetails(appId uint32) error {
 		Developers:  publicAppDetailsSteam.Developers,
 		Publishers:  publicAppDetailsSteam.Publishers,
 	}
-	date, err := time.Parse("2 Jan, 2006", publicAppDetailsSteam.ReleaseDate.Date)
-	if err != nil {
-		revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, true, true)
-		return errors.Join(err, revertErr)
+
+	game.ComingSoon = publicAppDetailsSteam.ReleaseDate.ComingSoon
+	if len(publicAppDetailsSteam.ReleaseDate.Date) > 0 {
+		date, err := time.Parse("2 Jan, 2006", publicAppDetailsSteam.ReleaseDate.Date)
+		if err != nil {
+			revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, true, true)
+			return errors.Join(err, revertErr)
+		}
+		game.ReleaseDate = date
 	}
-	game.ReleaseDate = date
 
 	for _, elem := range publicAppDetailsSteam.Screenshots {
 		game.Screenshots = append(game.Screenshots, models.GameScreenshot{PathThumbnail: elem.PathThumbnail, PathFull: elem.PathFull})
