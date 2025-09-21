@@ -1,6 +1,9 @@
 package configs
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
 
 var router *gin.Engine
 
@@ -19,4 +22,11 @@ func RunRouter() error {
 
 func GetGinRouter() *gin.Engine {
 	return router
+}
+
+func SetCORS() {
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:5173"},
+		AllowMethods: []string{"GET", "PUT", "DELETE"},
+	}))
 }
