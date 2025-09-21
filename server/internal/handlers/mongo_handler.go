@@ -16,9 +16,17 @@ func InitMongoRoutes() {
 		err := services.ResetMongo()
 		if err != nil {
 			log.Println(err)
-			ctx.JSON(500, gin.H{})
+			ctx.JSON(500, gin.H{
+				"success": false,
+				"message": "",
+				"error":   "Internal server error",
+			})
 			return
 		}
-		ctx.JSON(200, gin.H{})
+		ctx.JSON(200, gin.H{
+			"success": true,
+			"message": "MongoDB cleared",
+			"error":   "",
+		})
 	})
 }

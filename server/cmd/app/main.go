@@ -22,10 +22,11 @@ func main() {
 	defer configs.DisconnectFromMongo()
 
 	configs.CreateRouter()
+	configs.SetCORS()
 
 	handlers.InitMongoRoutes()
 	handlers.InitStubRoutes()
-	handlers.ConnectGameRoutes()
+	handlers.InitGameRoutes()
 
 	err = configs.RunRouter()
 	if err != nil {

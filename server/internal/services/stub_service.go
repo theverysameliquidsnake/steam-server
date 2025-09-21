@@ -11,29 +11,29 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func RefreshStubs() error {
+func RefreshStubs() (int, error) {
 	response, err := http.Get("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
 	if err != nil {
-		return err
+		return -1, err
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	var publicApps []models.PublicAppSteam
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	err = json.Unmarshal([]byte(jsoniter.Get(body, "applist", "apps").ToString()), &publicApps)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	existingStubsMap := make(map[uint32]models.Stub)
 	existingStubs, err := repositories.FindStubsRawFilter(bson.D{})
 	if err != nil {
-		return err
+		return -1, err
 	}
 	for _, elem := range existingStubs {
 		existingStubsMap[elem.AppId] = elem
@@ -46,12 +46,17 @@ func RefreshStubs() error {
 			stubs = append(stubs, models.Stub{AppId: elem.AppId, Name: elem.Name, NeedsUpdate: true, Skip: false})
 		}
 	}
-	_, err = repositories.InsertStubs(stubs)
-	if err != nil {
-		return err
+
+	if len(stubs) == 0 {
+		return 0, nil
 	}
 
-	return nil
+	result, err := repositories.InsertStubs(stubs)
+	if err != nil {
+		return -1, err
+	}
+
+	return len(result), nil
 }
 
 func GetStubRequiredToUpdate() (models.Stub, error) {
@@ -70,4 +75,13 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	}
 
 	return models.Stub{}, errors.New("stub not found")
+}
+
+func GetAllStubs() ([]models.Stub, error) {
+	result, err := repositories.FindStubsRawFilter(bson.D{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
