@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
-	consts "github.com/theverysameliquidsnake/steam-db/pkg"
+	"github.com/theverysameliquidsnake/steam-db/pkg/consts"
 )
 
 func ResetMongo() error {

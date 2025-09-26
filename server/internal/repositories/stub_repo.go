@@ -5,7 +5,7 @@ import (
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
-	consts "github.com/theverysameliquidsnake/steam-db/pkg"
+	"github.com/theverysameliquidsnake/steam-db/pkg/consts"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"

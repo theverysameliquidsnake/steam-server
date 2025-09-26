@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -12,18 +11,17 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
 	"github.com/theverysameliquidsnake/steam-db/internal/repositories"
+	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
 )
 
 func GetSteamAppDetails(appId uint32) (models.Game, error) {
-	// Set Stub's needs_update = false
-	err := repositories.SetStubNeedsUpdateStatus(appId, false)
+	// Get App Details from Steam API
+	client, err := utils.UseProxyClient()
 	if err != nil {
-		revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, true, true)
-		return models.Game{}, errors.Join(err, revertErr)
+		return models.Game{}, err
 	}
 
-	// Get App Details from Steam API
-	response, err := http.Get(fmt.Sprintf("https://store.steampowered.com/api/appdetails/?appids=%d&l=english", appId))
+	response, err := client.Get(fmt.Sprintf("https://store.steampowered.com/api/appdetails/?appids=%d&l=english", appId))
 	if err != nil {
 		revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, true, true)
 		return models.Game{}, errors.Join(err, revertErr)
@@ -57,7 +55,7 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 	}
 
 	// Get App Details from SteamSpy API
-	response, err = http.Get(fmt.Sprintf("https://steamspy.com/api.php?request=appdetails&appid=%d", appId))
+	response, err = client.Get(fmt.Sprintf("https://steamspy.com/api.php?request=appdetails&appid=%d", appId))
 	if err != nil {
 		revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, true, true)
 		return models.Game{}, errors.Join(err, revertErr)

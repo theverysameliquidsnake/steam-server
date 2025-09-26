@@ -3,17 +3,22 @@ package services
 import (
 	"errors"
 	"io"
-	"net/http"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
 	"github.com/theverysameliquidsnake/steam-db/internal/repositories"
+	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func RefreshStubs() (int, error) {
-	response, err := http.Get("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
+	client, err := utils.UseProxyClient()
+	if err != nil {
+		return -1, err
+	}
+
+	response, err := client.Get("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
 	if err != nil {
 		return -1, err
 	}
@@ -61,6 +66,8 @@ func RefreshStubs() (int, error) {
 }
 
 func GetStubRequiredToUpdate() (models.Stub, error) {
+	utils.Lock()
+	defer utils.Unlock()
 	result, err := repositories.FindStubsRawFilter(bson.D{
 		{Key: "$and", Value: bson.A{
 			bson.D{{Key: "needs_update", Value: true}},
@@ -72,6 +79,13 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	}
 
 	if len(result) > 0 {
+		// Set Stub's needs_update = false
+		err = repositories.SetStubNeedsUpdateStatus(result[0].AppId, false)
+		if err != nil {
+			revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(result[0].AppId, true, true)
+			return models.Stub{}, errors.Join(err, revertErr)
+		}
+
 		return result[0], nil
 	}
 

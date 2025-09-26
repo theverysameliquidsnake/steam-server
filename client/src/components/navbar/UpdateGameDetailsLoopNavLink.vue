@@ -36,7 +36,7 @@
                         this.$parent.hideSpinner();
                         this.$parent.addToast("Error", utils.getCurrentTime(), error.response.data.error);
                     }
-                }, 2000);
+                }, 2500);
             },
 
             stopUpdating() {
