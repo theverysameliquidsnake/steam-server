@@ -5,8 +5,15 @@ type StubTypeCount struct {
 	Count uint32 `bson:"count"`
 }
 
+type GameReleaseYearCount struct {
+	ReleaseYear int    `bson:"_id"`
+	Count       uint32 `bson:"count"`
+}
+
 type ChartsDatasets struct {
-	TotalCountOfStubs          uint32
-	TotalCountOfUntouchedStubs uint32
-	TotalStubsByType           []StubTypeCount
+	TotalCountOfStubs              uint32
+	TotalCountOfUntouchedStubs     uint32
+	TotalCountOfUnreleasedYetGames uint32
+	TotalStubsByType               []StubTypeCount
+	TotalGamesReleasedByYears      []GameReleaseYearCount
 }

@@ -1,5 +1,5 @@
 <template>
-    <a class="nav-link" href="#" @click="pullStubs">
+    <a class="dropdown-item" href="#" @click="pullStubs">
         <i class="bi bi-pen"></i>
         Edit exceptions
     </a>

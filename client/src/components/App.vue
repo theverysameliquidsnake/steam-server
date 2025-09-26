@@ -1,3 +1,10 @@
+<style>
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+</style>
+
 <template>
     <!-- Top Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -9,7 +16,7 @@
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <edit-exceptions-nav-link></edit-exceptions-nav-link>
+                        <charts-nav-link></charts-nav-link>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -27,12 +34,12 @@
                                 <update-game-details-loop-nav-link></update-game-details-loop-nav-link>
                             </li>
                             <li>
+                                <edit-exceptions-nav-link></edit-exceptions-nav-link>
+                            </li>
+                            <li>
                                 <drop-mongo-nav-link></drop-mongo-nav-link>
                             </li>
                         </ul>
-                    </li>
-                    <li class="nav-item">
-                        <charts-nav-link></charts-nav-link>
                     </li>
                 </ul>
             </div>
@@ -59,6 +66,9 @@
             </div>
             <div class="col-3">
                 <stubs-type-pie-chart :dataset="chartsData.TotalStubsByType"></stubs-type-pie-chart>
+            </div>
+            <div class="col-6">
+                <games-by-release-year-bar-chart :unreleased="chartsData.TotalCountOfUnreleasedYetGames" :dataset-by-year="chartsData.TotalGamesReleasedByYears"></games-by-release-year-bar-chart>
             </div>
         </div>
     </div>
@@ -88,6 +98,7 @@
 
     import StubsProcessedPieChart from './charts/StubsProcessedPieChart.vue';
     import StubsTypePieChart from './charts/StubsTypePieChart.vue';
+    import GamesByReleaseYearBarChart from './charts/GamesByReleaseYearBarChart.vue';
 
     import LoadMoreStubsButton from './LoadMoreStubsButton.vue';
 
@@ -116,6 +127,7 @@
 
             StubsProcessedPieChart,
             StubsTypePieChart,
+            GamesByReleaseYearBarChart,
             
             LoadMoreStubsButton,
 

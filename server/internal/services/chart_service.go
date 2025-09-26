@@ -22,10 +22,22 @@ func GetChartsDatasets() (models.ChartsDatasets, error) {
 		return models.ChartsDatasets{}, err
 	}
 
+	totalUnreleasedGames, err := repositories.CountGamesRawFilter(bson.D{{Key: "coming_soon", Value: true}})
+	if err != nil {
+		return models.ChartsDatasets{}, err
+	}
+
+	totalGamesByReleaseYear, err := repositories.GroupGamesByReleaseYear()
+	if err != nil {
+		return models.ChartsDatasets{}, err
+	}
+
 	var dataset models.ChartsDatasets
 	dataset.TotalCountOfStubs = uint32(totalStubs)
 	dataset.TotalCountOfUntouchedStubs = uint32(totalUntouchedStubs)
+	dataset.TotalCountOfUnreleasedYetGames = uint32(totalUnreleasedGames)
 	dataset.TotalStubsByType = stubTypeDataset
+	dataset.TotalGamesReleasedByYears = totalGamesByReleaseYear
 
 	return dataset, nil
 }
