@@ -51,8 +51,9 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 
 	// Check if App Requested from Steam API is a game
 	if publicAppDetailsSteam.Type != "game" {
+		typeErr := repositories.SetStubType(appId, publicAppDetailsSteam.Type)
 		revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(appId, false, true)
-		return models.Game{}, errors.Join(errors.New("assertion: not a game type app"), revertErr)
+		return models.Game{}, errors.Join(errors.New("assertion: not a game type app"), revertErr, typeErr)
 	}
 
 	// Get App Details from SteamSpy API

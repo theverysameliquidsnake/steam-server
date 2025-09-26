@@ -14,6 +14,8 @@ func InitGameRoutes() {
 	router := configs.GetGinRouter()
 
 	gameGroup := router.Group("/game")
+
+	// PUT /game/insert/<app id>
 	gameGroup.PUT("/insert/:appid", func(ctx *gin.Context) {
 		appId, err := strconv.ParseUint(ctx.Param("appid"), 10, 32)
 		if err != nil {

@@ -27,6 +27,6 @@ func GetGinRouter() *gin.Engine {
 func SetCORS() {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:5173"},
-		AllowMethods: []string{"GET", "PUT", "DELETE"},
+		AllowMethods: []string{"GET", "PUT", "PATCH", "DELETE"},
 	}))
 }

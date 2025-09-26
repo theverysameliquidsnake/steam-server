@@ -6,4 +6,5 @@ type Stub struct {
 	Type        string `bson:"type"`
 	NeedsUpdate bool   `bson:"needs_update"`
 	Skip        bool   `bson:"skip"`
+	Ignore      bool   `bson:"ignore"`
 }

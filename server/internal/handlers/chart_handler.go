@@ -8,14 +8,14 @@ import (
 	"github.com/theverysameliquidsnake/steam-db/internal/services"
 )
 
-func InitMongoRoutes() {
+func InitChartRoutes() {
 	router := configs.GetGinRouter()
 
-	mongoGroup := router.Group("/mongo")
+	chartGroup := router.Group("/chart")
 
-	// DELETE /mongo/drop
-	mongoGroup.DELETE("/drop", func(ctx *gin.Context) {
-		err := services.ResetMongo()
+	// GET /chart/dataset
+	chartGroup.GET("/dataset", func(ctx *gin.Context) {
+		results, err := services.GetChartsDatasets()
 		if err != nil {
 			log.Println(err)
 			ctx.JSON(500, gin.H{
@@ -25,9 +25,11 @@ func InitMongoRoutes() {
 			})
 			return
 		}
+
 		ctx.JSON(200, gin.H{
 			"success": true,
-			"message": "MongoDB cleared",
+			"data":    results,
+			"message": "Returned charts datasets",
 			"error":   "",
 		})
 	})

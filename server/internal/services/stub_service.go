@@ -9,6 +9,7 @@ import (
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
 	"github.com/theverysameliquidsnake/steam-db/internal/repositories"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func RefreshStubs() (int, error) {
@@ -43,7 +44,7 @@ func RefreshStubs() (int, error) {
 	for _, elem := range publicApps {
 		_, isStubExists := existingStubsMap[elem.AppId]
 		if !isStubExists {
-			stubs = append(stubs, models.Stub{AppId: elem.AppId, Name: elem.Name, NeedsUpdate: true, Skip: false})
+			stubs = append(stubs, models.Stub{AppId: elem.AppId, Name: elem.Name, NeedsUpdate: true, Skip: false, Ignore: false})
 		}
 	}
 
@@ -77,8 +78,13 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	return models.Stub{}, errors.New("stub not found")
 }
 
-func GetAllStubs() ([]models.Stub, error) {
-	result, err := repositories.FindStubsRawFilter(bson.D{})
+func GetInvalidStubs(offset int64) ([]models.Stub, error) {
+	opts := options.Find()
+	opts.SetSort(bson.D{{Key: "appid", Value: 1}})
+	opts.SetLimit(25)
+	opts.SetSkip(offset)
+
+	result, err := repositories.FindStubsRawFilterOptions(bson.D{{Key: "$and", Value: bson.A{bson.D{{Key: "needs_update", Value: true}}, bson.D{{Key: "skip", Value: true}}, bson.D{{Key: "ignore", Value: false}}}}}, *opts)
 	if err != nil {
 		return nil, err
 	}

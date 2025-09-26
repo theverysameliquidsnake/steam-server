@@ -27,6 +27,7 @@ func main() {
 	handlers.InitMongoRoutes()
 	handlers.InitStubRoutes()
 	handlers.InitGameRoutes()
+	handlers.InitChartRoutes()
 
 	err = configs.RunRouter()
 	if err != nil {
