@@ -1,45 +1,64 @@
 <template>
     <!-- Top Navbar -->
-    <nav class="px-1 navbar navbar-dark bg-dark">
-        <div class="container-fluid justify-content-start">
-            <i class="bi bi-bar-chart-steps" style="color: white;"></i>
-            <a class="navbar-brand ps-2" href="#">Steam Charts</a>
-        </div>
-    </nav>
-    <!-- Side Toolbar -->
-    <div class="row">
-        <div class="col-3" >
-            <div class="d-flex">
-                <edit-stub-button></edit-stub-button>
-            </div>
-            <div class="d-flex">
-                <button type="button" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                    <i class="bi bi-tools"></i>
-                    <span class="ps-2">Tools</span>
-                </button>
-            </div>
-            <div class="collapse ps-1" id="collapseExample">
-                <ul>
-                    <li>
-                        <refresh-stubs-button></refresh-stubs-button>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <brand></brand>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <edit-exceptions-nav-link></edit-exceptions-nav-link>
                     </li>
-                    <li>
-                        <update-game-details-button></update-game-details-button>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-tools"></i>
+                            Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                            <li>
+                                <refresh-stubs-nav-link></refresh-stubs-nav-link>
+                            </li>
+                            <li>
+                                <update-game-details-nav-link></update-game-details-nav-link>
+                            </li>
+                            <li>
+                                <update-game-details-loop-nav-link></update-game-details-loop-nav-link>
+                            </li>
+                            <li>
+                                <drop-mongo-nav-link></drop-mongo-nav-link>
+                            </li>
+                        </ul>
                     </li>
-                    <li>
-                        <update-game-details-loop-button></update-game-details-loop-button>
-                    </li>
-                    <li>
-                        <drop-mongo-button></drop-mongo-button>
+                    <li class="nav-item">
+                        <charts-nav-link></charts-nav-link>
                     </li>
                 </ul>
             </div>
         </div>
-        <div class="col-9">
-            <div class="row">
-                <div v-for="pulledStub in pulledStubs" class="col-4">
-                    <stub-unit :app-id="pulledStub.AppId" :app-name="pulledStub.Name"></stub-unit>
-                </div>
+    </nav> 
+    <!-- Stubs Page -->
+    <div v-if="isInvalidStubsRendered">
+        <table class="table table-hover">
+            <tbody>
+                <template v-for="pulledStub in pulledStubs">
+                    <stub-unit :app-id="pulledStub.AppId" :app-name="pulledStub.Name" :app-type="pulledStub.Type" :needs-update="pulledStub.NeedsUpdate" :skip="pulledStub.Skip"></stub-unit>
+                </template>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-center mt-2">
+            <load-more-stubs-button></load-more-stubs-button>
+        </div>
+    </div>
+    <!-- Charts Page -->
+    <div v-if="isChartsRendered">
+        <div class="row">
+            <div class="col-3">
+                <stubs-processed-pie-chart :unprocessed="chartsData.TotalCountOfUntouchedStubs" :total="chartsData.TotalCountOfStubs"></stubs-processed-pie-chart>
+            </div>
+            <div class="col-3">
+                <stubs-type-pie-chart :dataset="chartsData.TotalStubsByType"></stubs-type-pie-chart>
             </div>
         </div>
     </div>
@@ -57,12 +76,21 @@
 </template>
 
 <script>
-    import StubUnit from './StubUnit.vue';
-    import EditStubButton from './EditStubButton.vue';
-    import RefreshStubsButton from './RefreshStubsButton.vue';
-    import DropMongoButton from './DropMongoButton.vue';
-    import UpdateGameDetailsButton from './UpdateGameDetailsButton.vue';
-    import UpdateGameDetailsLoopButton from './UpdateGameDetailsLoopButton.vue';
+    import Brand from './navbar/Brand.vue';
+    import EditExceptionsNavLink from './navbar/EditExceptionsNavLink.vue';
+    import RefreshStubsNavLink from './navbar/RefreshStubsNavLink.vue';
+    import UpdateGameDetailsNavLink from './navbar/UpdateGameDetailsNavLink.vue';
+    import UpdateGameDetailsLoopNavLink from './navbar/UpdateGameDetailsLoopNavLink.vue';
+    import DropMongoNavLink from './navbar/DropMongoNavLink.vue';
+    import ChartsNavLink from './navbar/ChartsNavLink.vue';
+
+    import StubUnit from './units/StubUnit.vue';
+
+    import StubsProcessedPieChart from './charts/StubsProcessedPieChart.vue';
+    import StubsTypePieChart from './charts/StubsTypePieChart.vue';
+
+    import LoadMoreStubsButton from './LoadMoreStubsButton.vue';
+
     import Toast from './notifs/Toast.vue';
 
     export default {
@@ -71,17 +99,36 @@
             return {
                 showSpinner: false,
                 pulledStubs: [],
+                chartsData: {},
                 toastsData: []
             }
         },
         components: {
+            Brand,
+            EditExceptionsNavLink,
+            RefreshStubsNavLink,
+            UpdateGameDetailsNavLink,
+            UpdateGameDetailsLoopNavLink,
+            DropMongoNavLink,
+            ChartsNavLink,
+
             StubUnit,
-            EditStubButton,
-            RefreshStubsButton,
-            DropMongoButton,
-            UpdateGameDetailsButton,
-            UpdateGameDetailsLoopButton,
+
+            StubsProcessedPieChart,
+            StubsTypePieChart,
+            
+            LoadMoreStubsButton,
+
             Toast
+        },
+        computed: {
+            isInvalidStubsRendered() {
+                return this.pulledStubs.length;
+            },
+
+            isChartsRendered() {
+                return Object.keys(this.chartsData).length;
+            }
         },
         methods: {
             addToast(headerBig, headerSmall, description) {
@@ -94,6 +141,11 @@
 
             hideSpinner() {
                 this.showSpinner = false;
+            },
+
+            switchPage() {
+                this.pulledStubs = [];
+                this.chartsData = {};
             }
         }
     }

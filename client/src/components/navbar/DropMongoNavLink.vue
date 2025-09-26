@@ -1,16 +1,16 @@
 <template>
-    <button type="button" class="btn btn-link" @click="dropDatabase">
+    <a class="dropdown-item" href="#" @click="dropDatabase">
         <i class="bi bi-folder-minus"></i>
-        <span class="ps-2">Drop MongoDB</span>
-    </button>
+        Drop MongoDB
+    </a>
 </template>
 
 <script>
-    import axios from "axios"
-    import utils from "../utils/utils"
+    import axios from "axios";
+    import utils from "../../utils/utils";
 
     export default {
-        name: "DropMongoButton",
+        name: "DropMongoNavLink",
         methods: {
             async dropDatabase() {
                 try {

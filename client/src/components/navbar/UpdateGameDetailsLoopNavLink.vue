@@ -1,20 +1,20 @@
 <template>
-    <button v-if="updateIsRunning" type="button" class="btn btn-link" @click="stopUpdating">
+    <a v-if="updateIsRunning" class="dropdown-item" href="#" @click="stopUpdating">
         <i class="bi bi-clock-history"></i>
-        <span class="ps-2">Stop Update Game Details (Loop)</span>
-    </button>
-    <button v-else type="button" class="btn btn-link" @click="updateGameDetails">
+        Stop Update Game Details (Loop)
+    </a>
+    <a v-else class="dropdown-item" href="#" @click="updateGameDetails">
         <i class="bi bi-clock-history"></i>
-        <span class="ps-2">Update Game Details (Loop)</span>
-    </button>
+        Update Game Details (Loop)
+    </a>
 </template>
 
 <script>
-    import axios from "axios"
-    import utils from "../utils/utils"
+    import axios from "axios";
+    import utils from "../../utils/utils";
 
     export default {
-        name: "UpdateGameDetailsButton",
+        name: "UpdateGameDetailsLoopNavLink",
         data() {
             return {
                 updateIsRunning: false,
@@ -30,8 +30,8 @@
                         let response = await axios.get("http://localhost:8080/stub/request");
                         this.$parent.addToast("Success", utils.getCurrentTime(), response.data.message);
                         response = await axios.put(`http://localhost:8080/game/insert/${response.data.data.appid}`);
-                        this.$parent.addToast("Success", utils.getCurrentTime(), response.data.message);
                         this.$parent.hideSpinner();
+                        this.$parent.addToast("Success", utils.getCurrentTime(), response.data.message);
                     } catch(error) {
                         this.$parent.hideSpinner();
                         this.$parent.addToast("Error", utils.getCurrentTime(), error.response.data.error);

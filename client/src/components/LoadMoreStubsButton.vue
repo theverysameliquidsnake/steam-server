@@ -1,8 +1,5 @@
 <template>
-    <button type="button" class="btn btn-link" @click="pullStubs">
-        <i class="bi bi-pen"></i>
-        <span class="ps-2">Edit "Stubs"</span>
-    </button>
+    <button type="button" class="btn btn-primary mb-3" @click="pullStubs">Load More</button>
 </template>
 
 <script>
@@ -10,14 +7,16 @@
     import utils from "../utils/utils"
 
     export default {
-        name: "EditStubsButton",
+        name: "LoadMoreStubsButton",
         methods: {
             async pullStubs() {
                 try {
                     this.$parent.displaySpinner();
-                    this.$parent.pulledStubs = [];
-                    const response = await axios.get("http://localhost:8080/stub/all");
-                    this.$parent.pulledStubs = response.data.data;
+                    const response = await axios.get(`http://localhost:8080/stub/all/${this.$parent.pulledStubs.length}`);
+                    if (response.data.data.length) {
+                        this.$parent.pulledStubs = this.$parent.pulledStubs.concat(response.data.data);
+                    }
+                    this.$parent.hideSpinner();
                     this.$parent.addToast("Success", utils.getCurrentTime(), response.data.message);
                 } catch(error) {
                     this.$parent.hideSpinner();
@@ -25,5 +24,5 @@
                 }
             }
         }
-    };
+    }
 </script>
