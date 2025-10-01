@@ -1,5 +1,10 @@
 package models
 
+type StubByStatus struct {
+	Status string
+	Count  uint32
+}
+
 type StubTypeCount struct {
 	Type  string `bson:"_id"`
 	Count uint32 `bson:"count"`
@@ -10,10 +15,13 @@ type GameReleaseYearCount struct {
 	Count       uint32 `bson:"count"`
 }
 
+type GameReleaseYearDataset struct {
+	TotalUnreleasedYetGames   uint32
+	TotalGamesReleasedByYears []GameReleaseYearCount
+}
+
 type ChartsDatasets struct {
-	TotalCountOfStubs              uint32
-	TotalCountOfUntouchedStubs     uint32
-	TotalCountOfUnreleasedYetGames uint32
-	TotalStubsByType               []StubTypeCount
-	TotalGamesReleasedByYears      []GameReleaseYearCount
+	TotalStubsByStatus []StubByStatus
+	TotalStubsByType   []StubTypeCount
+	GamesByYearDataset GameReleaseYearDataset
 }

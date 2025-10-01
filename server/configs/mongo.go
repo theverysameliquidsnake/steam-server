@@ -31,3 +31,7 @@ func DisconnectFromMongo() error {
 func GetMongoClient() *mongo.Client {
 	return client
 }
+
+func GetMongoDatabase() *mongo.Database {
+	return client.Database(os.Getenv("MONGO_DATABASE"))
+}

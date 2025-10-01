@@ -1,7 +1,7 @@
 <template>
-    <a class="dropdown-item" href="#" @click="pullStubs">
+    <a class="nav-link" href="#" @click="pullStubs">
         <i class="bi bi-pen"></i>
-        Edit exceptions
+        All Apps
     </a>
 </template>
 

@@ -49,7 +49,7 @@ func RefreshStubs() (int, error) {
 	for _, elem := range publicApps {
 		_, isStubExists := existingStubsMap[elem.AppId]
 		if !isStubExists {
-			stubs = append(stubs, models.Stub{AppId: elem.AppId, Name: elem.Name, NeedsUpdate: true, Skip: false, Ignore: false})
+			stubs = append(stubs, models.Stub{AppId: elem.AppId, Name: elem.Name, New: true})
 		}
 	}
 
@@ -70,8 +70,9 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	defer utils.Unlock()
 	result, err := repositories.FindStubsRawFilter(bson.D{
 		{Key: "$and", Value: bson.A{
-			bson.D{{Key: "needs_update", Value: true}},
-			bson.D{{Key: "skip", Value: false}},
+			bson.D{{Key: "new", Value: true}},
+			bson.D{{Key: "error", Value: false}},
+			bson.D{{Key: "ignore", Value: false}},
 		}},
 	})
 	if err != nil {
@@ -79,10 +80,10 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	}
 
 	if len(result) > 0 {
-		// Set Stub's needs_update = false
-		err = repositories.SetStubNeedsUpdateStatus(result[0].AppId, false)
+		// Set Stub's "new" = false
+		err = repositories.SetStubNewStatus(result[0].AppId, false)
 		if err != nil {
-			revertErr := repositories.SetStubNeedsUpdateAndSkipStatuses(result[0].AppId, true, true)
+			revertErr := repositories.SetStubNewStatus(result[0].AppId, true)
 			return models.Stub{}, errors.Join(err, revertErr)
 		}
 
@@ -92,13 +93,13 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	return models.Stub{}, errors.New("stub not found")
 }
 
-func GetInvalidStubs(offset int64) ([]models.Stub, error) {
+func GetAllStubs(offset int64) ([]models.Stub, error) {
 	opts := options.Find()
 	opts.SetSort(bson.D{{Key: "appid", Value: 1}})
-	opts.SetLimit(25)
+	opts.SetLimit(50)
 	opts.SetSkip(offset)
 
-	result, err := repositories.FindStubsRawFilterOptions(bson.D{{Key: "$and", Value: bson.A{bson.D{{Key: "needs_update", Value: true}}, bson.D{{Key: "skip", Value: true}}, bson.D{{Key: "ignore", Value: false}}}}}, *opts)
+	result, err := repositories.FindStubsRawFilterOptions(bson.D{}, *opts)
 	if err != nil {
 		return nil, err
 	}

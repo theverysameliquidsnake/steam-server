@@ -8,21 +8,24 @@
     export default {
     	name: "StubsProcessedPieChart",
 		props: {
-			unprocessed: Number,
-            total: Number
+			dataset: Array
 		},
         mounted() {
         	const ctx = this.$refs.pieChart;
         	Chart.register(...registerables);
 
 			let data = {
-				labels:["unprocessed", "processed"],
+				labels:[],
 				datasets:[{
 					label: "apps by status",
-					data: [this.unprocessed, this.total - this.unprocessed],
+					data: [],
 					hoverOffset: 4
 				}]
 			};
+			for (const elem of this.dataset) {
+				data.labels.push(elem.Status);
+				data.datasets[0].data.push(elem.Count);
+			}
 			const config = {
   				type: 'doughnut',
   				data: data

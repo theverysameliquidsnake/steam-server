@@ -2,17 +2,21 @@ package repositories
 
 import (
 	"context"
+	"os"
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
-	"github.com/theverysameliquidsnake/steam-db/pkg/consts"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+func GetGameCollection() *mongo.Collection {
+	return configs.GetMongoClient().Database(os.Getenv("MONGO_DATABASE")).Collection(os.Getenv("MONGO_GAMES_COLLECTION"))
+}
+
 // Read
 func FindGamesRawFilter(filter bson.D) ([]models.Game, error) {
-	cursor, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_GAME_COLLECTION).Find(context.Background(), filter)
+	cursor, err := GetGameCollection().Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +30,7 @@ func FindGamesRawFilter(filter bson.D) ([]models.Game, error) {
 }
 
 func CountGamesRawFilter(filter bson.D) (int64, error) {
-	count, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_GAME_COLLECTION).CountDocuments(context.Background(), filter)
+	count, err := GetGameCollection().CountDocuments(context.Background(), filter)
 	if err != nil {
 		return -1, err
 	}
@@ -35,7 +39,12 @@ func CountGamesRawFilter(filter bson.D) (int64, error) {
 }
 
 func GroupGamesByReleaseYear() ([]models.GameReleaseYearCount, error) {
-	cursor, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_GAME_COLLECTION).Aggregate(context.Background(), mongo.Pipeline{bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: bson.D{{Key: "$year", Value: "$release_date"}}}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}}})
+	cursor, err := GetGameCollection().Aggregate(context.Background(), mongo.Pipeline{bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: bson.D{{Key: "$year", Value: "$release_date"}}},
+			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
+		}},
+	}})
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +59,7 @@ func GroupGamesByReleaseYear() ([]models.GameReleaseYearCount, error) {
 
 // Create
 func InsertGames(games []models.Game) ([]any, error) {
-	result, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_GAME_COLLECTION).InsertMany(context.Background(), games)
+	result, err := GetGameCollection().InsertMany(context.Background(), games)
 	if err != nil {
 		return nil, err
 	}

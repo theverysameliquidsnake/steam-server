@@ -2,18 +2,22 @@ package repositories
 
 import (
 	"context"
+	"os"
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
-	"github.com/theverysameliquidsnake/steam-db/pkg/consts"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+func GetStubCollection() *mongo.Collection {
+	return configs.GetMongoClient().Database(os.Getenv("MONGO_DATABASE")).Collection(os.Getenv("MONGO_STUBS_COLLECTION"))
+}
+
 // Read
 func FindStubsRawFilter(filter bson.D) ([]models.Stub, error) {
-	cursor, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).Find(context.Background(), filter)
+	cursor, err := GetStubCollection().Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +31,7 @@ func FindStubsRawFilter(filter bson.D) ([]models.Stub, error) {
 }
 
 func FindStubsRawFilterOptions(filter bson.D, opts options.FindOptionsBuilder) ([]models.Stub, error) {
-	cursor, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).Find(context.Background(), filter, &opts)
+	cursor, err := GetStubCollection().Find(context.Background(), filter, &opts)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +45,7 @@ func FindStubsRawFilterOptions(filter bson.D, opts options.FindOptionsBuilder) (
 }
 
 func CountStubsRawFilter(filter bson.D) (int64, error) {
-	count, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).CountDocuments(context.Background(), filter)
+	count, err := GetStubCollection().CountDocuments(context.Background(), filter)
 	if err != nil {
 		return -1, err
 	}
@@ -50,7 +54,7 @@ func CountStubsRawFilter(filter bson.D) (int64, error) {
 }
 
 func GroupStubsByType() ([]models.StubTypeCount, error) {
-	cursor, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).Aggregate(context.Background(), mongo.Pipeline{bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$type"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}}})
+	cursor, err := GetStubCollection().Aggregate(context.Background(), mongo.Pipeline{bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$type"}, {Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}}}}}})
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +69,7 @@ func GroupStubsByType() ([]models.StubTypeCount, error) {
 
 // Create
 func InsertStubs(stubs []models.Stub) ([]any, error) {
-	result, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).InsertMany(context.Background(), stubs)
+	result, err := GetStubCollection().InsertMany(context.Background(), stubs)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +79,7 @@ func InsertStubs(stubs []models.Stub) ([]any, error) {
 
 // Update
 func SetStubType(appId uint32, appType string) error {
-	_, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).UpdateOne(
+	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{
@@ -89,12 +93,12 @@ func SetStubType(appId uint32, appType string) error {
 	return nil
 }
 
-func SetStubNeedsUpdateStatus(appId uint32, needsUpdate bool) error {
-	_, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).UpdateOne(
+func SetStubNewStatus(appId uint32, new bool) error {
+	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "needs_update", Value: needsUpdate}}},
+			{Key: "$set", Value: bson.D{{Key: "new", Value: new}}},
 		},
 	)
 	if err != nil {
@@ -104,12 +108,12 @@ func SetStubNeedsUpdateStatus(appId uint32, needsUpdate bool) error {
 	return nil
 }
 
-func SetStubSkipStatus(appId uint32, skip bool) error {
-	_, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).UpdateOne(
+func SetStubFirstUpdateStatus(appId uint32, firstUpdate bool) error {
+	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "skip", Value: skip}}},
+			{Key: "$set", Value: bson.D{{Key: "first_update", Value: firstUpdate}}},
 		},
 	)
 	if err != nil {
@@ -119,12 +123,27 @@ func SetStubSkipStatus(appId uint32, skip bool) error {
 	return nil
 }
 
-func SetStubNeedsUpdateAndSkipStatuses(appId uint32, needsUpdate bool, skip bool) error {
-	_, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).UpdateOne(
+func SetStubSecondUpdateStatus(appId uint32, secondUpdate bool) error {
+	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "needs_update", Value: needsUpdate}, {Key: "skip", Value: skip}}},
+			{Key: "$set", Value: bson.D{{Key: "second_update", Value: secondUpdate}}},
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetStubErrorStatus(appId uint32, error bool) error {
+	_, err := GetStubCollection().UpdateOne(
+		context.Background(),
+		bson.M{"appid": appId},
+		bson.D{
+			{Key: "$set", Value: bson.D{{Key: "error", Value: error}}},
 		},
 	)
 	if err != nil {
@@ -135,7 +154,7 @@ func SetStubNeedsUpdateAndSkipStatuses(appId uint32, needsUpdate bool, skip bool
 }
 
 func SetStubIgnoreStatus(appId uint32, ignore bool) error {
-	_, err := configs.GetMongoClient().Database(consts.MONGO_DATABASE).Collection(consts.MONGO_STUB_COLLECTION).UpdateOne(
+	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{

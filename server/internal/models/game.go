@@ -28,12 +28,13 @@ type Game struct {
 	Publishers      []string         `bson:"publishers"`
 	Genres          []string         `bson:"genres"`
 	Tags            []string         `bson:"tags"`
+	AI              bool             `bson:"ai"`
 	Screenshots     []GameScreenshot `bson:"screenshots"`
 	Movies          []GameMovie      `bson:"movies"`
 	ComingSoon      bool             `bson:"coming_soon"`
 	ReleaseDate     time.Time        `bson:"release_date"`
-	OwnersMin       uint32           `bson:"owners_min"`
-	OwnersMax       uint32           `bson:"owners_max"`
+	Owners          uint32           `bson:"owners"`
+	ReviewScore     float32          `bson:"review_score"`
 	ReviewsPositive uint32           `bson:"reviews_positive"`
 	ReviewsNegative uint32           `bson:"reviews_negative"`
 }

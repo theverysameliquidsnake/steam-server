@@ -10,16 +10,30 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <brand></brand>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" 
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item">
+                        <edit-exceptions-nav-link></edit-exceptions-nav-link>
+                    </li>
+                    <li class="nav-item">
                         <charts-nav-link></charts-nav-link>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle"
+                            href="#"
+                            id="navbarDropdownMenuLink"
+                            role="button"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
                             <i class="bi bi-tools"></i>
                             Tools
                         </a>
@@ -32,9 +46,6 @@
                             </li>
                             <li>
                                 <update-game-details-loop-nav-link></update-game-details-loop-nav-link>
-                            </li>
-                            <li>
-                                <edit-exceptions-nav-link></edit-exceptions-nav-link>
                             </li>
                             <li>
                                 <drop-mongo-nav-link></drop-mongo-nav-link>
@@ -50,25 +61,33 @@
         <table class="table table-hover">
             <tbody>
                 <template v-for="pulledStub in pulledStubs">
-                    <stub-unit :app-id="pulledStub.AppId" :app-name="pulledStub.Name" :app-type="pulledStub.Type" :needs-update="pulledStub.NeedsUpdate" :skip="pulledStub.Skip"></stub-unit>
+                    <stub-unit :app-id="pulledStub.AppId"
+                        :app-name="pulledStub.Name"
+                        :app-type="pulledStub.Type"
+                        :new-stub="pulledStub.New"
+                        :first-update="pulledStub.FirstUpdate"
+                        :second-update="pulledStub.SecondUpdate"
+                        :error="pulledStub.Error"
+                        :ignore="pulledStub.Ignore">
+                    </stub-unit>
                 </template>
             </tbody>
         </table>
         <div class="d-flex justify-content-center mt-2">
-            <load-more-stubs-button></load-more-stubs-button>
+            <stubs-pagination-button></stubs-pagination-button>
         </div>
     </div>
     <!-- Charts Page -->
     <div v-if="isChartsRendered">
         <div class="row">
             <div class="col-3">
-                <stubs-processed-pie-chart :unprocessed="chartsData.TotalCountOfUntouchedStubs" :total="chartsData.TotalCountOfStubs"></stubs-processed-pie-chart>
+                <stubs-processed-pie-chart :dataset="chartsData.TotalStubsByStatus"></stubs-processed-pie-chart>
             </div>
             <div class="col-3">
                 <stubs-type-pie-chart :dataset="chartsData.TotalStubsByType"></stubs-type-pie-chart>
             </div>
             <div class="col-6">
-                <games-by-release-year-bar-chart :unreleased="chartsData.TotalCountOfUnreleasedYetGames" :dataset-by-year="chartsData.TotalGamesReleasedByYears"></games-by-release-year-bar-chart>
+                <games-by-release-year-bar-chart :dataset="chartsData.GamesByYearDataset"></games-by-release-year-bar-chart>
             </div>
         </div>
     </div>
@@ -100,7 +119,7 @@
     import StubsTypePieChart from './charts/StubsTypePieChart.vue';
     import GamesByReleaseYearBarChart from './charts/GamesByReleaseYearBarChart.vue';
 
-    import LoadMoreStubsButton from './LoadMoreStubsButton.vue';
+    import StubsPaginationButton from './buttons/StubsPaginationButton.vue';
 
     import Toast from './notifs/Toast.vue';
 
@@ -129,7 +148,7 @@
             StubsTypePieChart,
             GamesByReleaseYearBarChart,
             
-            LoadMoreStubsButton,
+            StubsPaginationButton,
 
             Toast
         },

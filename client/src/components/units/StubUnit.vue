@@ -5,14 +5,26 @@
         <td>{{ appType }}</td>
         <td>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="needsUpdate" :checked="needsUpdate" disabled>
-                <label class="form-check-label" for="needsUpdate">Needs Update</label>
+                <input class="form-check-input" type="checkbox" value="" id="newStub" :checked="newStub" disabled>
+                <label class="form-check-label" for="newStub">New</label>
             </div>
         </td>
         <td>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="skip" :checked="skip" disabled>
-                <label class="form-check-label" for="skip">Skip</label>
+                <input class="form-check-input" type="checkbox" value="" id="firstUpdate" :checked="firstUpdate" disabled>
+                <label class="form-check-label" for="firstUpdate">First Update</label>
+            </div>
+        </td>
+        <td>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="secondUpdate" :checked="secondUpdate" disabled>
+                <label class="form-check-label" for="secondUpdate">Second Update</label>
+            </div>
+        </td>
+        <td>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="error" :checked="error" disabled>
+                <label class="form-check-label" for="error">Error</label>
             </div>
         </td>
         <td>
@@ -35,8 +47,10 @@
             appName: String,
             appId: Number,
             appType: String,
-            needsUpdate: Boolean,
-            skip: Boolean,
+            newStub: Boolean,
+            firstUpdate: Boolean,
+            secondUpdate: Boolean,
+            error: Boolean,
             ignore: Boolean
         },
         computed: {

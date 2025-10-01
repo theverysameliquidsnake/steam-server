@@ -8,29 +8,28 @@
     export default {
     	name: "GamesByReleaseYearBarChart",
 		props: {
-			unreleased: Number,
-            datasetByYear: Array
+            dataset: Array
 		},
         mounted() {
         	const ctx = this.$refs.pieChart;
         	Chart.register(...registerables);
 
-            this.datasetByYear.sort((a, b) => {
+            this.dataset.TotalGamesReleasedByYears.sort((a, b) => {
                 if (a.ReleaseYear > b.ReleaseYear) return 1;
                 if (a.ReleaseYear < b.ReleaseYear) return -1;
                 return 0;
             });
 
 			let data = {
-				labels:["unreleased (yet)"],
+				labels:["soon"],
 				datasets:[{
 					label: "games",
-					data: [this.unreleased],
+					data: [this.dataset.TotalUnreleasedYetGames],
 					borderWidth: 1
 				}]
 			};
 
-            for (const elem of this.datasetByYear) {
+            for (const elem of this.dataset.TotalGamesReleasedByYears) {
 				data.labels.push(elem.ReleaseYear);
 				data.datasets[0].data.push(elem.Count);
 			}
