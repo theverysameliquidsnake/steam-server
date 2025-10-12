@@ -1,18 +1,13 @@
 package utils
 
 import (
-	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/playwright-community/playwright-go"
-	"github.com/theverysameliquidsnake/steam-db/internal/models"
 )
 
 var engine *playwright.Playwright
 var browser playwright.Browser
-var page playwright.Page
 
 func InitPlaywright() error {
 	return playwright.Install(
@@ -30,7 +25,7 @@ func StartPlaywright() error {
 	engine = pw
 
 	br, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
-		Headless: playwright.Bool(false),
+		Headless: playwright.Bool(true),
 		Proxy: &playwright.Proxy{
 			Server: os.Getenv("PROXY_FULL"),
 		},
@@ -39,15 +34,6 @@ func StartPlaywright() error {
 		return err
 	}
 	browser = br
-
-	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36') Chrome/85.0.4183.121 Safari/537.36"
-	p, err := browser.NewPage(playwright.BrowserNewPageOptions{
-		UserAgent: &userAgent,
-	})
-	if err != nil {
-		return err
-	}
-	page = p
 
 	return nil
 }
@@ -64,11 +50,21 @@ func StopPlaywright() error {
 	return nil
 }
 
-func ParseSteamPage(appId uint32) (models.Game, error) {
+/*func ParseSteamPage(appId uint32) (models.Game, error) {
 	timeout, err := strconv.ParseFloat(os.Getenv("PLAYWRIGHT_TIMEOUT"), 64)
 	if err != nil {
 		return models.Game{}, err
 	}
+
+	userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36') Chrome/85.0.4183.121 Safari/537.36"
+	page, err := browser.NewPage(playwright.BrowserNewPageOptions{
+		UserAgent: &userAgent,
+	})
+	if err != nil {
+		return models.Game{}, err
+	}
+	defer page.Close()
+
 	if _, err := page.Goto(fmt.Sprintf("https://store.steampowered.com/app/%d", appId), playwright.PageGotoOptions{
 		WaitUntil: playwright.WaitUntilStateLoad,
 		Timeout:   &timeout,
@@ -105,6 +101,29 @@ func ParseSteamPage(appId uint32) (models.Game, error) {
 		}
 	}
 
+	// Reviews
+	if err := page.Locator("button[aria-controls='review_type_flyout']").Hover(); err != nil {
+		return models.Game{}, err
+	}
+
+	positiveText, err := page.Locator("label[for='review_type_positive'] > .user_reviews_count").TextContent()
+	if err != nil {
+		return models.Game{}, err
+	}
+	positive, err := strconv.ParseUint(Strip(positiveText), 10, 32)
+	if err != nil {
+		return models.Game{}, err
+	}
+
+	negativeText, err := page.Locator("label[for='review_type_negative'] > .user_reviews_count").TextContent()
+	if err != nil {
+		return models.Game{}, err
+	}
+	negative, err := strconv.ParseUint(Strip(negativeText), 10, 32)
+	if err != nil {
+		return models.Game{}, err
+	}
+
 	// Tags
 	if err := page.Locator(".app_tag.add_button").Click(); err != nil {
 		return models.Game{}, err
@@ -124,32 +143,9 @@ func ParseSteamPage(appId uint32) (models.Game, error) {
 		tags = append(tags, tag)
 	}
 
-	// Reviews
-	if err := page.Locator("button[aria-controls='review_type_flyout']").Hover(); err != nil {
-		return models.Game{}, err
-	}
-
-	positiveText, err := page.Locator("label[for='review_type_positive'] > .user_reviews_count").TextContent()
-	if err != nil {
-		return models.Game{}, err
-	}
-	positive, err := strconv.ParseUint(strings.Trim(strings.Trim(positiveText, "("), ")"), 10, 32)
-	if err != nil {
-		return models.Game{}, err
-	}
-
-	negativeText, err := page.Locator("label[for='review_type_negative'] > .user_reviews_count").TextContent()
-	if err != nil {
-		return models.Game{}, err
-	}
-	negative, err := strconv.ParseUint(strings.Trim(strings.Trim(negativeText, "("), ")"), 10, 32)
-	if err != nil {
-		return models.Game{}, err
-	}
-
 	return models.Game{
 		Tags:            tags,
 		ReviewsPositive: uint32(positive),
 		ReviewsNegative: uint32(negative),
 	}, nil
-}
+}*/

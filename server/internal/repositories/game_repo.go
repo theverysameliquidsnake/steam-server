@@ -20,6 +20,7 @@ func FindGamesRawFilter(filter bson.D) ([]models.Game, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(context.Background())
 
 	var results []models.Game
 	if err = cursor.All(context.Background(), &results); err != nil {
@@ -48,6 +49,7 @@ func GroupGamesByReleaseYear() ([]models.GameReleaseYearCount, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(context.Background())
 
 	var results []models.GameReleaseYearCount
 	if err = cursor.All(context.Background(), &results); err != nil {
@@ -65,4 +67,14 @@ func InsertGames(games []models.Game) ([]any, error) {
 	}
 
 	return result.InsertedIDs, nil
+}
+
+// Update
+func UpdateGameSecondTime(filter bson.D, update bson.D) error {
+	_, err := GetGameCollection().UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

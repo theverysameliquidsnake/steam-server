@@ -21,6 +21,7 @@ func FindStubsRawFilter(filter bson.D) ([]models.Stub, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(context.Background())
 
 	var results []models.Stub
 	if err = cursor.All(context.Background(), &results); err != nil {
@@ -35,6 +36,7 @@ func FindStubsRawFilterOptions(filter bson.D, opts options.FindOptionsBuilder) (
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(context.Background())
 
 	var results []models.Stub
 	if err = cursor.All(context.Background(), &results); err != nil {
@@ -42,6 +44,16 @@ func FindStubsRawFilterOptions(filter bson.D, opts options.FindOptionsBuilder) (
 	}
 
 	return results, nil
+}
+
+func FindStubRawFilterAndUpdate(filter bson.D, update bson.D) (models.Stub, error) {
+	var stub models.Stub
+	err := GetStubCollection().FindOneAndUpdate(context.Background(), filter, update).Decode(&stub)
+	if err != nil {
+		return models.Stub{}, err
+	}
+
+	return stub, nil
 }
 
 func CountStubsRawFilter(filter bson.D) (int64, error) {
@@ -58,6 +70,7 @@ func GroupStubsByType() ([]models.StubTypeCount, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(context.Background())
 
 	var results []models.StubTypeCount
 	if err = cursor.All(context.Background(), &results); err != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/handlers"
+	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
 )
 
 func init() {
@@ -28,6 +29,11 @@ func main() {
 	handlers.InitStubRoutes()
 	handlers.InitGameRoutes()
 	handlers.InitChartRoutes()
+
+	utils.StartPlaywright()
+	defer utils.StopPlaywright()
+
+	configs.InitIGDBToken()
 
 	err = configs.RunRouter()
 	if err != nil {
