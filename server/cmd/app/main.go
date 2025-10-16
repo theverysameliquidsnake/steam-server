@@ -6,7 +6,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/handlers"
-	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
 )
 
 func init() {
@@ -27,11 +26,12 @@ func main() {
 
 	handlers.InitMongoRoutes()
 	handlers.InitStubRoutes()
+	handlers.InitTagRoutes()
 	handlers.InitGameRoutes()
 	handlers.InitChartRoutes()
 
-	utils.StartPlaywright()
-	defer utils.StopPlaywright()
+	//utils.StartPlaywright()
+	//defer utils.StopPlaywright()
 
 	configs.InitIGDBToken()
 

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
@@ -121,27 +122,24 @@ func SetStubNewStatus(appId uint32, new bool) error {
 	return nil
 }
 
-func SetStubFirstUpdateStatus(appId uint32, firstUpdate bool) error {
-	_, err := GetStubCollection().UpdateOne(
-		context.Background(),
-		bson.M{"appid": appId},
-		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "first_update", Value: firstUpdate}}},
-		},
-	)
-	if err != nil {
-		return err
+func SetStubNumberUpdateStatus(appId uint32, updateNumber int, updateStatus bool) error {
+	var field string
+	switch updateNumber {
+	case 1:
+		field = "first_update"
+	case 2:
+		field = "second_update"
+	case 3:
+		field = "third_update"
+	default:
+		return errors.New("update field not specified")
 	}
 
-	return nil
-}
-
-func SetStubSecondUpdateStatus(appId uint32, secondUpdate bool) error {
 	_, err := GetStubCollection().UpdateOne(
 		context.Background(),
 		bson.M{"appid": appId},
 		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "second_update", Value: secondUpdate}}},
+			{Key: "$set", Value: bson.D{{Key: field, Value: updateStatus}}},
 		},
 	)
 	if err != nil {

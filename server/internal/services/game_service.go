@@ -107,6 +107,10 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 		})
 	}
 
+	for _, elem := range publicAppDetailsSteam.Genres {
+		game.Genres = append(game.Genres, elem.Description)
+	}
+
 	// Insert first part of update of game
 	resultIds, err := repositories.InsertGames([]models.Game{game})
 	if err != nil {
@@ -115,7 +119,7 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 	}
 
 	// Set stub's "first update"
-	err = repositories.SetStubFirstUpdateStatus(appId, true)
+	err = repositories.SetStubNumberUpdateStatus(appId, 1, true)
 	if err != nil {
 		revertErr := repositories.SetStubErrorStatus(appId, true)
 		return models.Game{}, errors.Join(err, revertErr)
@@ -146,7 +150,7 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 	}
 
 	// Check by external game uid
-	var externalGames []models.ExternalGame
+	var externalGames []models.ExternalGameIGDB
 	err = json.Unmarshal([]byte(jsoniter.Get(body).ToString()), &externalGames)
 	if err != nil {
 		revertErr := repositories.SetStubErrorStatus(appId, true)
@@ -196,38 +200,38 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 	}
 
 	// Parsed values
-	var parsedGenres []string
+	var parsedGenresIGDB []string
 	for _, value := range gamesIGDB[0].Genres {
-		parsedGenres = append(parsedGenres, value.Name)
+		parsedGenresIGDB = append(parsedGenresIGDB, value.Name)
 	}
 
-	var parsedThemes []string
+	var parsedThemesIGDB []string
 	for _, value := range gamesIGDB[0].Themes {
-		parsedThemes = append(parsedThemes, value.Name)
+		parsedThemesIGDB = append(parsedThemesIGDB, value.Name)
 	}
 
-	var parsedFranchises []string
+	var parsedFranchisesIGDB []string
 	for _, value := range gamesIGDB[0].Franchises {
-		parsedFranchises = append(parsedFranchises, value.Name)
+		parsedFranchisesIGDB = append(parsedFranchisesIGDB, value.Name)
 	}
 
-	var parsedSeries []string
+	var parsedSeriesIGDB []string
 	for _, value := range gamesIGDB[0].Series {
-		parsedSeries = append(parsedSeries, value.Name)
+		parsedSeriesIGDB = append(parsedSeriesIGDB, value.Name)
 	}
 
-	var parsedKeywords []string
+	var parsedKeywordsIGDB []string
 	for _, value := range gamesIGDB[0].Keywords {
-		parsedKeywords = append(parsedKeywords, value.Name)
+		parsedKeywordsIGDB = append(parsedKeywordsIGDB, value.Name)
 	}
 
 	// Insert second part of update of game
 	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "genres", Value: parsedGenres},
-		{Key: "themes", Value: parsedThemes},
-		{Key: "franchises", Value: parsedFranchises},
-		{Key: "series", Value: parsedSeries},
-		{Key: "keywords", Value: parsedKeywords},
+		{Key: "genres_igdb", Value: parsedGenresIGDB},
+		{Key: "themes_igdb", Value: parsedThemesIGDB},
+		{Key: "franchises_igdb", Value: parsedFranchisesIGDB},
+		{Key: "series_igdb", Value: parsedSeriesIGDB},
+		{Key: "keywords_igdb", Value: parsedKeywordsIGDB},
 	}}}
 
 	err = repositories.UpdateGameSecondTime(bson.D{{Key: "_id", Value: resultIds[0]}}, update)
@@ -257,7 +261,7 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 	}*/
 
 	// Set stub's "second update"
-	err = repositories.SetStubSecondUpdateStatus(appId, true)
+	err = repositories.SetStubNumberUpdateStatus(appId, 2, true)
 	if err != nil {
 		revertErr := repositories.SetStubErrorStatus(appId, true)
 		return models.Game{}, errors.Join(err, revertErr)

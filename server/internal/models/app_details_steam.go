@@ -1,5 +1,10 @@
 package models
 
+type Genre struct {
+	Id          uint32 `json:"id"`
+	Description string `json:"description"`
+}
+
 type AppDetailsScreenshotSteam struct {
 	Id            uint32 `json:"id"`
 	PathThumbnail string `json:"path_thumbnail"`
@@ -29,6 +34,7 @@ type AppDetailsSteam struct {
 	SteamAppId       uint32                      `json:"steam_appid"`
 	Type             string                      `json:"type"`
 	Name             string                      `json:"name"`
+	Genres           []Genre                     `json:"genres"`
 	ShortDescription string                      `json:"short_description"`
 	HeaderImage      string                      `json:"header_image"`
 	Developers       []string                    `json:"developers"`

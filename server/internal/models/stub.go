@@ -7,6 +7,7 @@ type Stub struct {
 	New          bool   `bson:"new"`
 	FirstUpdate  bool   `bson:"first_update"`
 	SecondUpdate bool   `bson:"second_update"`
+	ThirdUpdate  bool   `bson:"third_update"`
 	Error        bool   `bson:"error"`
 	Ignore       bool   `bson:"ignore"`
 }

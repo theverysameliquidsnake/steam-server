@@ -1,5 +1,6 @@
 <style>
     html, body {
+        height: 100%;
         max-width: 100%;
         overflow-x: hidden;
     }
@@ -40,6 +41,9 @@
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <li>
                                 <refresh-stubs-nav-link></refresh-stubs-nav-link>
+                            </li>
+                            <li>
+                                <update-tags-nav-link></update-tags-nav-link>
                             </li>
                             <li>
                                 <update-game-details-nav-link></update-game-details-nav-link>
@@ -108,6 +112,7 @@
     import Brand from './navbar/Brand.vue';
     import EditExceptionsNavLink from './navbar/EditExceptionsNavLink.vue';
     import RefreshStubsNavLink from './navbar/RefreshStubsNavLink.vue';
+    import UpdateTagsNavLink from './navbar/UpdateTagsNavLink.vue';
     import UpdateGameDetailsNavLink from './navbar/UpdateGameDetailsNavLink.vue';
     import UpdateGameDetailsLoopNavLink from './navbar/UpdateGameDetailsLoopNavLink.vue';
     import DropMongoNavLink from './navbar/DropMongoNavLink.vue';
@@ -137,6 +142,7 @@
             Brand,
             EditExceptionsNavLink,
             RefreshStubsNavLink,
+            UpdateTagsNavLink,
             UpdateGameDetailsNavLink,
             UpdateGameDetailsLoopNavLink,
             DropMongoNavLink,

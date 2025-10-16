@@ -3,3 +3,5 @@
 client/node_modules
 client/.vscode/*
 !client/.vscode/extensions.json
+
+server/Steam Game Tags · SteamDB.html

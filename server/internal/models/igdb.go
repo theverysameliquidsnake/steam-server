@@ -1,43 +1,43 @@
 package models
 
-type ExternalGameSource struct {
+type ExternalGameSourceIGDB struct {
 	Id   uint32 `json:"id"`
 	Name string `json:"name"`
 }
 
-type ExternalGame struct {
+type ExternalGameIGDB struct {
 	Game uint32 `json:"game"`
 }
 
-type Genre struct {
+type GenreIGDB struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
 
-type Theme struct {
+type ThemeIGDB struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
 
-type Franchise struct {
+type FranchiseIGDB struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
 
-type Collection struct {
+type CollectionIGDB struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
 
-type Keyword struct {
+type KeywordIGDB struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
 
 type GameIGDB struct {
-	Genres     []Genre      `json:"genres"`
-	Themes     []Theme      `json:"themes"`
-	Franchises []Franchise  `json:"franchises"`
-	Series     []Collection `json:"collections"`
-	Keywords   []Keyword    `json:"keywords"`
+	Genres     []GenreIGDB      `json:"genres"`
+	Themes     []ThemeIGDB      `json:"themes"`
+	Franchises []FranchiseIGDB  `json:"franchises"`
+	Series     []CollectionIGDB `json:"collections"`
+	Keywords   []KeywordIGDB    `json:"keywords"`
 }
