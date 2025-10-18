@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"io"
 
 	jsoniter "github.com/json-iterator/go"
@@ -80,6 +81,11 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 	}
 
 	return stub, nil
+}
+
+func SetStubErrorAndRevert(stubId uint32, initialError error) error {
+	revertErr := repositories.SetStubErrorStatus(stubId, true)
+	return errors.Join(revertErr, initialError)
 }
 
 func GetAllStubs(offset int64) ([]models.Stub, error) {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -15,7 +16,7 @@ func GetTagsCollection() *mongo.Collection {
 
 // Read
 func GetAllTags() (map[uint32]string, error) {
-	cursor, err := GetTagsCollection().Find(context.Background(), nil)
+	cursor, err := GetTagsCollection().Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return nil, err
 	}

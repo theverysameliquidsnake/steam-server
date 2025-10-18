@@ -15,6 +15,8 @@ func init() {
 }
 
 func main() {
+	configs.EnableLogger()
+
 	_, err := configs.ConnectToMongo()
 	if err != nil {
 		log.Fatal(err)
@@ -29,9 +31,6 @@ func main() {
 	handlers.InitTagRoutes()
 	handlers.InitGameRoutes()
 	handlers.InitChartRoutes()
-
-	//utils.StartPlaywright()
-	//defer utils.StopPlaywright()
 
 	configs.InitIGDBToken()
 

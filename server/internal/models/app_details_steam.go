@@ -1,7 +1,7 @@
 package models
 
 type Genre struct {
-	Id          uint32 `json:"id"`
+	Id          string `json:"id"`
 	Description string `json:"description"`
 }
 

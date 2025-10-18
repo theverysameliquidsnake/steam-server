@@ -29,7 +29,7 @@ func InitGameRoutes() {
 			return
 		}
 
-		game, err := services.GetSteamAppDetails(uint32(appId))
+		game, err := services.ConstructGameObject(uint32(appId))
 		if err != nil {
 			log.Println(err)
 			errorMsg := fmt.Sprintf("Internal server error: (%d)", appId)

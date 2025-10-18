@@ -3,65 +3,89 @@ package services
 import (
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
 	"github.com/theverysameliquidsnake/steam-db/internal/repositories"
-	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func GetSteamAppDetails(appId uint32) (models.Game, error) {
-	// Get App Details from Steam API
-	client, err := utils.UseProxyClient()
+func ConstructGameObject(appId uint32) (*models.Game, error) {
+	logMsg := fmt.Sprintf("Processing %d ...", appId)
+	configs.PrintLog(logMsg)
+	err := repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
-		return models.Game{}, err
+		return nil, err
 	}
 
-	response, err := client.Get(fmt.Sprintf("https://store.steampowered.com/api/appdetails/?appids=%d&l=english", appId))
+	// Get Details from Steam API
+	publicAppDetailsSteam, err := GetSteamResponse(appId)
 	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-	defer response.Body.Close()
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	if !jsoniter.Get(body, strconv.FormatUint(uint64(appId), 10), "success").ToBool() {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(errors.New("jsoniter: could not confirm success"), revertErr)
-	}
-
-	var publicAppDetailsSteam models.AppDetailsSteam
-	json := jsoniter.ConfigCompatibleWithStandardLibrary
-	err = json.Unmarshal([]byte(jsoniter.Get(body, strconv.FormatUint(uint64(appId), 10), "data").ToString()), &publicAppDetailsSteam)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Check if App Requested from Steam API is a game
-	if publicAppDetailsSteam.Type != "game" {
-		typeErr := repositories.SetStubType(appId, publicAppDetailsSteam.Type)
-		revertErr := repositories.SetStubIgnoreStatus(appId, true)
-		return models.Game{}, errors.Join(errors.New("assertion: not a game type app"), revertErr, typeErr)
+		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
 	// Set Stub's type
 	err = repositories.SetStubType(appId, publicAppDetailsSteam.Type)
 	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
+		return nil, SetStubErrorAndRevert(appId, err)
+	}
+
+	logMsg = fmt.Sprintf("Success from Steam API for %d ...", appId)
+	configs.PrintLog(logMsg)
+	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if App Requested from Steam API is a game
+	if publicAppDetailsSteam.Type != "game" {
+		revertErr := repositories.SetStubIgnoreStatus(appId, true)
+		return nil, errors.Join(revertErr, errors.New("assertion: not a game type app"))
+	}
+
+	// Set stub's "steam update"
+	err = repositories.SetStubNumberUpdateStatus(appId, 1, true)
+	if err != nil {
+		return nil, SetStubErrorAndRevert(appId, err)
+	}
+
+	// Get Details from SteamCMD API
+	steamCMD, err := GetSteamCMDResponse(publicAppDetailsSteam.SteamAppId)
+	if err != nil {
+		return nil, SetStubErrorAndRevert(appId, err)
+	}
+
+	logMsg = fmt.Sprintf("Success from SteamCMD API for %d ...", appId)
+	configs.PrintLog(logMsg)
+	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
+	if err != nil {
+		return nil, err
+	}
+
+	// Set stub's "steamcmd update"
+	err = repositories.SetStubNumberUpdateStatus(appId, 2, true)
+	if err != nil {
+		return nil, SetStubErrorAndRevert(appId, err)
+	}
+
+	// Get Details from IGDB API
+	gameIGDB, err := GetIGDBResponse(publicAppDetailsSteam.SteamAppId)
+	if err != nil {
+		return nil, SetStubErrorAndRevert(appId, err)
+	}
+
+	logMsg = fmt.Sprintf("Success from IGDB API for %d ...", appId)
+	configs.PrintLog(logMsg)
+	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
+	if err != nil {
+		return nil, err
+	}
+
+	// Set stub's "igdb update"
+	err = repositories.SetStubNumberUpdateStatus(appId, 3, true)
+	if err != nil {
+		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
 	// Construct Mongo document
@@ -80,11 +104,12 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 		if publicAppDetailsSteam.ReleaseDate.Date[0] >= '0' && publicAppDetailsSteam.ReleaseDate.Date[0] <= '9' {
 			pattern = "2 Jan, 2006"
 		}
+
 		date, err := time.Parse(pattern, publicAppDetailsSteam.ReleaseDate.Date)
 		if err != nil {
-			revertErr := repositories.SetStubErrorStatus(appId, true)
-			return models.Game{}, errors.Join(err, revertErr)
+			return nil, SetStubErrorAndRevert(appId, err)
 		}
+
 		game.ReleaseDate = date
 	}
 
@@ -111,161 +136,59 @@ func GetSteamAppDetails(appId uint32) (models.Game, error) {
 		game.Genres = append(game.Genres, elem.Description)
 	}
 
-	// Insert first part of update of game
-	resultIds, err := repositories.InsertGames([]models.Game{game})
+	game.AI = len(steamCMD.AIContentType) > 0
+
+	tagsMap, err := repositories.GetAllTags()
 	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
+		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	// Set stub's "first update"
-	err = repositories.SetStubNumberUpdateStatus(appId, 1, true)
+	for _, value := range steamCMD.StoreTags {
+		tagId, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return nil, SetStubErrorAndRevert(appId, err)
+		}
+
+		if len(tagsMap[uint32(tagId)]) > 0 {
+			game.Tags = append(game.Tags, tagsMap[uint32(tagId)])
+		} else {
+			game.HasUnmappedTags = true
+			game.Tags = append(game.Tags, value)
+		}
+	}
+
+	for _, value := range gameIGDB.Genres {
+		game.GenresIGDB = append(game.GenresIGDB, value.Name)
+	}
+
+	for _, value := range gameIGDB.Themes {
+		game.ThemesIGDB = append(game.ThemesIGDB, value.Name)
+	}
+
+	for _, value := range gameIGDB.Franchises {
+		game.FranchisesIGDB = append(game.FranchisesIGDB, value.Name)
+	}
+
+	for _, value := range gameIGDB.Series {
+		game.SeriesIGDB = append(game.SeriesIGDB, value.Name)
+	}
+
+	for _, value := range gameIGDB.Keywords {
+		game.KeywordsIGDB = append(game.KeywordsIGDB, value.Name)
+	}
+
+	// Insert document
+	_, err = repositories.InsertGames([]models.Game{game})
 	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
+		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	// Get Details from IGDB API
-	payload := fmt.Sprintf("fields *; where uid = \"%d\" & external_game_source = 1;", publicAppDetailsSteam.SteamAppId)
-	request, err := http.NewRequest("POST", "https://api.igdb.com/v4/external_games", strings.NewReader(payload))
+	logMsg = fmt.Sprintf("Inserted document for %d ...", appId)
+	configs.PrintLog(logMsg)
+	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-	request.Header.Set("Content-Type", "text/plain")
-	for key, value := range configs.GetIGDBHeaders() {
-		request.Header.Set(key, value)
-	}
-	response, err = client.Do(request)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-	defer response.Body.Close()
-
-	body, err = io.ReadAll(response.Body)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
+		return nil, err
 	}
 
-	// Check by external game uid
-	var externalGames []models.ExternalGameIGDB
-	err = json.Unmarshal([]byte(jsoniter.Get(body).ToString()), &externalGames)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	if len(externalGames) == 0 {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Get Details from IGDB API
-	payload = fmt.Sprintf("fields *, genres.*, themes.*, franchises.*, collections.*, keywords.*; where id = %d;", externalGames[0].Game)
-	request, err = http.NewRequest("POST", "https://api.igdb.com/v4/games", strings.NewReader(payload))
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-	request.Header.Set("Content-Type", "text/plain")
-	for key, value := range configs.GetIGDBHeaders() {
-		request.Header.Set(key, value)
-	}
-	response, err = client.Do(request)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-	defer response.Body.Close()
-
-	body, err = io.ReadAll(response.Body)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Check by igdb id
-	var gamesIGDB []models.GameIGDB
-	err = json.Unmarshal([]byte(jsoniter.Get(body).ToString()), &gamesIGDB)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	if len(gamesIGDB) == 0 {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Parsed values
-	var parsedGenresIGDB []string
-	for _, value := range gamesIGDB[0].Genres {
-		parsedGenresIGDB = append(parsedGenresIGDB, value.Name)
-	}
-
-	var parsedThemesIGDB []string
-	for _, value := range gamesIGDB[0].Themes {
-		parsedThemesIGDB = append(parsedThemesIGDB, value.Name)
-	}
-
-	var parsedFranchisesIGDB []string
-	for _, value := range gamesIGDB[0].Franchises {
-		parsedFranchisesIGDB = append(parsedFranchisesIGDB, value.Name)
-	}
-
-	var parsedSeriesIGDB []string
-	for _, value := range gamesIGDB[0].Series {
-		parsedSeriesIGDB = append(parsedSeriesIGDB, value.Name)
-	}
-
-	var parsedKeywordsIGDB []string
-	for _, value := range gamesIGDB[0].Keywords {
-		parsedKeywordsIGDB = append(parsedKeywordsIGDB, value.Name)
-	}
-
-	// Insert second part of update of game
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "genres_igdb", Value: parsedGenresIGDB},
-		{Key: "themes_igdb", Value: parsedThemesIGDB},
-		{Key: "franchises_igdb", Value: parsedFranchisesIGDB},
-		{Key: "series_igdb", Value: parsedSeriesIGDB},
-		{Key: "keywords_igdb", Value: parsedKeywordsIGDB},
-	}}}
-
-	err = repositories.UpdateGameSecondTime(bson.D{{Key: "_id", Value: resultIds[0]}}, update)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Parse Steam page for remaining details
-	/*parsedGame, err := utils.ParseSteamPage(appId)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	// Insert second part of update of game
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "tags", Value: parsedGame.Tags},
-		{Key: "reviews_positive", Value: parsedGame.ReviewsPositive},
-		{Key: "reviews_negative", Value: parsedGame.ReviewsNegative},
-		{Key: "review_score", Value: (float32(parsedGame.ReviewsPositive) / (float32(parsedGame.ReviewsPositive) + float32(parsedGame.ReviewsNegative))) * 100},
-	}}}
-	err = repositories.UpdateGameSecondTime(bson.D{{Key: "_id", Value: resultIds[0]}}, update)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}*/
-
-	// Set stub's "second update"
-	err = repositories.SetStubNumberUpdateStatus(appId, 2, true)
-	if err != nil {
-		revertErr := repositories.SetStubErrorStatus(appId, true)
-		return models.Game{}, errors.Join(err, revertErr)
-	}
-
-	return game, nil
+	return &game, nil
 }

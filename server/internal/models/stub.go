@@ -1,13 +1,13 @@
 package models
 
 type Stub struct {
-	AppId        uint32 `bson:"appid"`
-	Name         string `bson:"name"`
-	Type         string `bson:"type"`
-	New          bool   `bson:"new"`
-	FirstUpdate  bool   `bson:"first_update"`
-	SecondUpdate bool   `bson:"second_update"`
-	ThirdUpdate  bool   `bson:"third_update"`
-	Error        bool   `bson:"error"`
-	Ignore       bool   `bson:"ignore"`
+	AppId          uint32 `bson:"appid"`
+	Name           string `bson:"name"`
+	Type           string `bson:"type"`
+	New            bool   `bson:"new"`
+	SteamUpdate    bool   `bson:"steam_update"`
+	SteamCMDUpdate bool   `bson:"steamcmd_update"`
+	IGDBUpdate     bool   `bson:"igdb_update"`
+	Error          bool   `bson:"error"`
+	Ignore         bool   `bson:"ignore"`
 }

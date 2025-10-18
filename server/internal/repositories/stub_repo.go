@@ -126,11 +126,11 @@ func SetStubNumberUpdateStatus(appId uint32, updateNumber int, updateStatus bool
 	var field string
 	switch updateNumber {
 	case 1:
-		field = "first_update"
+		field = "steam_update"
 	case 2:
-		field = "second_update"
+		field = "steamcmd_update"
 	case 3:
-		field = "third_update"
+		field = "igdb_update"
 	default:
 		return errors.New("update field not specified")
 	}

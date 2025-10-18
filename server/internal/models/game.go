@@ -31,16 +31,12 @@ type Game struct {
 	Movies          []GameMovie      `bson:"movies"`
 	ComingSoon      bool             `bson:"coming_soon"`
 	ReleaseDate     time.Time        `bson:"release_date"`
+	AI              bool             `bson:"ai"`
+	Tags            []string         `bson:"tags"`
+	HasUnmappedTags bool             `bson:"has_unmapped_tags"`
 	GenresIGDB      []string         `bson:"genres_igdb"`
 	ThemesIGDB      []string         `bson:"themes_igdb"`
 	SeriesIGDB      []string         `bson:"series_igdb"`
 	FranchisesIGDB  []string         `bson:"franchises_igdb"`
 	KeywordsIGDB    []string         `bson:"keywords_igdb"`
-	HasUnmappedTags bool             `bson:"has_unmapped_tags"`
-	//AI              bool             `bson:"ai"`
-	//Tags            []string         `bson:"tags"`
-	//Owners          uint32           `bson:"owners"`
-	//ReviewScore     float32          `bson:"review_score"`
-	//ReviewsPositive uint32           `bson:"reviews_positive"`
-	//ReviewsNegative uint32           `bson:"reviews_negative"`
 }
