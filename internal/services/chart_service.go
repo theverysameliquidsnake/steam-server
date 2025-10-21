@@ -15,32 +15,34 @@ func GetStubsByStatusDataset() ([]models.StubByStatus, error) {
 	}
 
 	errorStub, err := repositories.CountStubsRawFilter(bson.D{
+		{Key: "error", Value: true},
+	})
+	if err != nil {
+		return []models.StubByStatus{}, err
+	}
+
+	igdbUpdate, err := repositories.CountStubsRawFilter(bson.D{
+		{Key: "igdb_update", Value: true},
+	})
+	if err != nil {
+		return []models.StubByStatus{}, err
+	}
+
+	steamcmdUpdate, err := repositories.CountStubsRawFilter(bson.D{
 		{Key: "$and", Value: bson.A{
-			bson.D{{Key: "error", Value: true}},
-			bson.D{{Key: "ignore", Value: false}},
+			bson.D{{Key: "steamcmd_update", Value: true}},
+			bson.D{{Key: "igdb_update", Value: false}},
 		}},
 	})
 	if err != nil {
 		return []models.StubByStatus{}, err
 	}
 
-	secondUpdate, err := repositories.CountStubsRawFilter(bson.D{
+	steamUpdate, err := repositories.CountStubsRawFilter(bson.D{
 		{Key: "$and", Value: bson.A{
-			bson.D{{Key: "second_update", Value: true}},
-			bson.D{{Key: "error", Value: false}},
-			bson.D{{Key: "ignore", Value: false}},
-		}},
-	})
-	if err != nil {
-		return []models.StubByStatus{}, err
-	}
-
-	firstUpdate, err := repositories.CountStubsRawFilter(bson.D{
-		{Key: "$and", Value: bson.A{
-			bson.D{{Key: "first_update", Value: true}},
-			bson.D{{Key: "second_update", Value: false}},
-			bson.D{{Key: "error", Value: false}},
-			bson.D{{Key: "ignore", Value: false}},
+			bson.D{{Key: "steam_update", Value: true}},
+			bson.D{{Key: "steamcmd_update", Value: false}},
+			bson.D{{Key: "igdb_update", Value: false}},
 		}},
 	})
 	if err != nil {
@@ -48,13 +50,7 @@ func GetStubsByStatusDataset() ([]models.StubByStatus, error) {
 	}
 
 	newStub, err := repositories.CountStubsRawFilter(bson.D{
-		{Key: "$and", Value: bson.A{
-			bson.D{{Key: "new", Value: true}},
-			bson.D{{Key: "first_update", Value: false}},
-			bson.D{{Key: "second_update", Value: false}},
-			bson.D{{Key: "error", Value: false}},
-			bson.D{{Key: "ignore", Value: false}},
-		}},
+		{Key: "new", Value: true},
 	})
 	if err != nil {
 		return []models.StubByStatus{}, err
@@ -62,8 +58,9 @@ func GetStubsByStatusDataset() ([]models.StubByStatus, error) {
 
 	return []models.StubByStatus{
 		{Status: "new", Count: uint32(newStub)},
-		{Status: "first update", Count: uint32(firstUpdate)},
-		{Status: "second update", Count: uint32(secondUpdate)},
+		{Status: "steam update", Count: uint32(steamUpdate)},
+		{Status: "steamcmd update", Count: uint32(steamcmdUpdate)},
+		{Status: "igdb update", Count: uint32(igdbUpdate)},
 		{Status: "error", Count: uint32(errorStub)},
 		{Status: "ignore", Count: uint32(ignored)},
 	}, nil

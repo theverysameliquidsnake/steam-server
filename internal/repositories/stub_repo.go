@@ -49,7 +49,7 @@ func FindStubsRawFilterOptions(filter bson.D, opts options.FindOptionsBuilder) (
 
 func FindStubRawFilterAndUpdate(filter bson.D, update bson.D) (models.Stub, error) {
 	var stub models.Stub
-	err := GetStubCollection().FindOneAndUpdate(context.Background(), filter, update).Decode(&stub)
+	err := GetStubCollection().FindOneAndUpdate(context.Background(), filter, update, options.FindOneAndUpdate().SetSort(bson.D{{Key: "appid", Value: -1}})).Decode(&stub)
 	if err != nil {
 		return models.Stub{}, err
 	}

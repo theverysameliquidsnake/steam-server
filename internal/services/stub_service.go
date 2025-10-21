@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"io"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/theverysameliquidsnake/steam-db/internal/models"
@@ -85,7 +86,8 @@ func GetStubRequiredToUpdate() (models.Stub, error) {
 
 func SetStubErrorAndRevert(stubId uint32, initialError error) error {
 	revertErr := repositories.SetStubErrorStatus(stubId, true)
-	return errors.Join(revertErr, initialError)
+	logErr := repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: errors.Join(revertErr, initialError).Error(), AppId: stubId}})
+	return errors.Join(logErr, revertErr, initialError)
 }
 
 func GetAllStubs(offset int64) ([]models.Stub, error) {

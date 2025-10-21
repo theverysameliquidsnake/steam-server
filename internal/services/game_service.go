@@ -12,7 +12,7 @@ import (
 )
 
 func ConstructGameObject(appId uint32) (*models.Game, error) {
-	logMsg := fmt.Sprintf("Processing %d ...", appId)
+	logMsg := fmt.Sprintf("processing %d", appId)
 	configs.PrintLog(logMsg)
 	err := repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
@@ -31,7 +31,7 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	logMsg = fmt.Sprintf("Success from Steam API for %d ...", appId)
+	logMsg = fmt.Sprintf("success from Steam API for %d", appId)
 	configs.PrintLog(logMsg)
 	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
@@ -41,6 +41,10 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 	// Check if App Requested from Steam API is a game
 	if publicAppDetailsSteam.Type != "game" {
 		revertErr := repositories.SetStubIgnoreStatus(appId, true)
+		err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: "not a game", AppId: appId}})
+		if err != nil {
+			return nil, err
+		}
 		return nil, errors.Join(revertErr, errors.New("assertion: not a game type app"))
 	}
 
@@ -56,7 +60,7 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	logMsg = fmt.Sprintf("Success from SteamCMD API for %d ...", appId)
+	logMsg = fmt.Sprintf("success from SteamCMD API for %d", appId)
 	configs.PrintLog(logMsg)
 	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
@@ -75,7 +79,7 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	logMsg = fmt.Sprintf("Success from IGDB API for %d ...", appId)
+	logMsg = fmt.Sprintf("success from IGDB API for %d", appId)
 	configs.PrintLog(logMsg)
 	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
@@ -99,7 +103,7 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 	}
 
 	game.ComingSoon = publicAppDetailsSteam.ReleaseDate.ComingSoon
-	if len(publicAppDetailsSteam.ReleaseDate.Date) > 0 {
+	if !game.ComingSoon && len(publicAppDetailsSteam.ReleaseDate.Date) > 0 {
 		pattern := "Jan 2, 2006"
 		if publicAppDetailsSteam.ReleaseDate.Date[0] >= '0' && publicAppDetailsSteam.ReleaseDate.Date[0] <= '9' {
 			pattern = "2 Jan, 2006"
@@ -183,7 +187,7 @@ func ConstructGameObject(appId uint32) (*models.Game, error) {
 		return nil, SetStubErrorAndRevert(appId, err)
 	}
 
-	logMsg = fmt.Sprintf("Inserted document for %d ...", appId)
+	logMsg = fmt.Sprintf("inserted document for %d", appId)
 	configs.PrintLog(logMsg)
 	err = repositories.InsertLogs([]models.Log{{Timestamp: time.Now(), Message: logMsg, AppId: appId}})
 	if err != nil {
