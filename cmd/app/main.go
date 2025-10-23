@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/theverysameliquidsnake/steam-db/configs"
 	"github.com/theverysameliquidsnake/steam-db/internal/handlers"
+	"github.com/theverysameliquidsnake/steam-db/pkg/utils"
 )
 
 func init() {
@@ -22,6 +23,12 @@ func main() {
 		log.Fatal(err)
 	}
 	defer configs.DisconnectFromMongo()
+
+	err = utils.StartPlaywright()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer utils.StopPlaywright()
 
 	configs.CreateRouter()
 	configs.SetCORS()

@@ -49,6 +49,19 @@ func GetStubsByStatusDataset() ([]models.StubByStatus, error) {
 		return []models.StubByStatus{}, err
 	}
 
+	orpStub, err := repositories.CountStubsRawFilter(bson.D{
+		{Key: "$and", Value: bson.A{
+			bson.D{{Key: "new", Value: false}},
+			bson.D{{Key: "error", Value: true}},
+			bson.D{{Key: "steam_update", Value: false}},
+			bson.D{{Key: "steamcmd_update", Value: false}},
+			bson.D{{Key: "igdb_update", Value: false}},
+		}},
+	})
+	if err != nil {
+		return []models.StubByStatus{}, err
+	}
+
 	newStub, err := repositories.CountStubsRawFilter(bson.D{
 		{Key: "new", Value: true},
 	})
@@ -58,6 +71,7 @@ func GetStubsByStatusDataset() ([]models.StubByStatus, error) {
 
 	return []models.StubByStatus{
 		{Status: "new", Count: uint32(newStub)},
+		{Status: "orphan", Count: uint32(orpStub)},
 		{Status: "steam update", Count: uint32(steamUpdate)},
 		{Status: "steamcmd update", Count: uint32(steamcmdUpdate)},
 		{Status: "igdb update", Count: uint32(igdbUpdate)},
